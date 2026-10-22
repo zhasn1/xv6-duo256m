@@ -7,6 +7,7 @@ _*
 *.img
 /mkfs/mkfs
 /kernel/kernel
+/kernel/kernel.bin
 /user/usys.S
 .gdbinit
 TAGS
