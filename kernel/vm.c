@@ -29,11 +29,18 @@ kvmmake(void)
   // uart registers
   kvmmap(kpgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W);
 
+#ifdef DUO
+  // PLIC, in two ranges, so the PLIC_CTRL page (0x701FF000)
+  // stays unmapped.
+  kvmmap(kpgtbl, PLIC, PLIC, 0x3000, PTE_R | PTE_W);
+  kvmmap(kpgtbl, PLIC + 0x201000, PLIC + 0x201000, PGSIZE, PTE_R | PTE_W);
+#else
   // virtio mmio disk interface
   kvmmap(kpgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
 
   // PLIC
-  kvmmap(kpgtbl, PLIC, PLIC, 0x4000000, PTE_R | PTE_W);
+  kvmmap(kpgtbl, PLIC, PLIC, PLIC_SIZE, PTE_R | PTE_W);
+#endif
 
   // map kernel text executable and read-only.
   kvmmap(kpgtbl, KERNBASE, KERNBASE, (uint64)etext - KERNBASE, PTE_R | PTE_X);

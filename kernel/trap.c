@@ -176,7 +176,7 @@ clockintr()
   // ask for the next timer interrupt. this also clears
   // the interrupt request. 1000000 is about a tenth
   // of a second.
-  w_stimecmp(r_time() + 1000000);
+  w_stimecmp(r_time() + INTERVAL);
 }
 
 // check if it's an external interrupt or software interrupt,
@@ -197,8 +197,10 @@ devintr()
 
     if (irq == UART0_IRQ) {
       uartintr();
+#ifndef DUO
     } else if (irq == VIRTIO0_IRQ) {
       virtio_disk_intr();
+#endif
     } else if (irq) {
       printk("unexpected interrupt irq=%d\n", irq);
     }

@@ -4,10 +4,11 @@ ENTRY( _entry )
 SECTIONS
 {
   /*
-   * ensure that entry.S / _entry is at 0x80000000,
-   * where qemu's -kernel jumps.
+   * ensure that entry.S / _entry is at KERNBASE:
+   * qemu's -kernel jumps to 0x80000000, and U-Boot
+   * loads the Duo kernel at 0x80200000.
    */
-  . = 0x80000000;
+  . = KERNBASE;
 
   .text : {
     kernel/entry.o(_entry)
@@ -36,9 +37,12 @@ SECTIONS
 
   .bss : {
     . = ALIGN(16);
-    *(.sbss .sbss.*) /* do not need to distinguish this from .bss */
+    _bss_start = .;
+    *(.sbss .sbss.*)
     . = ALIGN(16);
     *(.bss .bss.*)
+    . = ALIGN(16);
+    _bss_end = .;
   }
 
   PROVIDE(end = .);

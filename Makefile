@@ -1,5 +1,6 @@
 K=kernel
 U=user
+DUO := $(shell grep -q '^\#define DUO' $K/config.h && echo 1)
 
 OBJS = \
   $K/entry.o \
@@ -27,12 +28,17 @@ OBJS = \
   $K/exec.o \
   $K/sysfile.o \
   $K/kernelvec.o \
-  $K/plic.o \
-  $K/virtio_disk.o
+  $K/plic.o
+
+ifeq ($(DUO),1)
+OBJS += $K/ramdisk.o
+else
+OBJS += $K/virtio_disk.o
+endif
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
-#TOOLPREFIX = 
+#TOOLPREFIX =
 
 # Try to infer the correct TOOLPREFIX if not set
 ifndef TOOLPREFIX
@@ -79,6 +85,7 @@ CFLAGS += -fno-builtin-free
 CFLAGS += -fno-builtin-memcpy -Wno-main
 CFLAGS += -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf
 CFLAGS += -I.
+CFLAGS += -include $K/config.h
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
@@ -90,14 +97,25 @@ CFLAGS += -fno-pie -nopie
 endif
 
 LDFLAGS = -z max-page-size=4096
+CONFIG_STAMP := $(shell cksum < $K/config.h)
+ifneq ($(CONFIG_STAMP),$(shell cat $K/.config-stamp 2>/dev/null))
+$(shell rm -f $K/*.o $K/*.d $K/kernel $K/kernel.bin $K/kernel.asm $K/kernel.sym \
+              $U/*.o $U/*.d $U/_* $U/*.asm $U/*.sym fs.img; \
+        echo '$(CONFIG_STAMP)' > $K/.config-stamp)
+endif
+
+KERNBASE_LD := $(shell printf 'KERNBASE\n' | $(CC) -E -P -x c -include $K/config.h - | sed 's/[UuLl]*$$//')
 
 $K/kernel: $(OBJS) $K/kernel.ld
-	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) 
+	$(LD) $(LDFLAGS) --defsym=KERNBASE=$(KERNBASE_LD) -T $K/kernel.ld -o $K/kernel $(OBJS)
 	$(OBJDUMP) -S $K/kernel > $K/kernel.asm
 	$(OBJDUMP) -t $K/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $K/kernel.sym
 
 $K/%.o: $K/%.S
-	$(CC) -march=rv64gc -g $(DETFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$K/kernel.bin: $K/kernel
+	$(OBJCOPY) -O binary $K/kernel $K/kernel.bin
 
 tags: $(OBJS)
 	etags kernel/*.S kernel/*.c
@@ -157,7 +175,7 @@ fs.img: mkfs/mkfs README $(UPROGS)
 
 -include kernel/*.d user/*.d
 
-clean: 
+clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*/*.o */*.d */*.asm */*.sym \
 	$K/kernel fs.img \
@@ -181,12 +199,14 @@ QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
 QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
 qemu: check-qemu-version $K/kernel fs.img
+	@test -z "$(DUO)" || { echo "kernel/config.h holds the SG2002 config; run: git checkout kernel/config.h"; exit 1; }
 	$(QEMU) $(QEMUOPTS)
 
 .gdbinit: .gdbinit.tmpl-riscv
 	sed "s/:1234/:$(GDBPORT)/" < $^ > $@
 
 qemu-gdb: $K/kernel .gdbinit fs.img
+	@test -z "$(DUO)" || { echo "kernel/config.h holds the SG2002 config; run: git checkout kernel/config.h"; exit 1; }
 	@echo "*** Now run 'gdb' in another window." 1>&2
 	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
 

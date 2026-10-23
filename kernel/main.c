@@ -27,7 +27,11 @@ main()
     binit();            // buffer cache
     iinit();            // inode table
     fileinit();         // file table
+#ifdef DUO
+    ramdiskinit();      // fs.img in kernel memory
+#else
     virtio_disk_init(); // emulated hard disk
+#endif
     userinit();         // first user process
 
     __atomic_store_n(&started, 1, __ATOMIC_RELEASE);

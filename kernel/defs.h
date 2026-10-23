@@ -177,6 +177,12 @@ void            plicinithart(void);
 int             plic_claim(void);
 void            plic_complete(int);
 
+#ifdef DUO
+// ramdisk.c
+void            ramdiskinit(void);
+void            ramdiskrw(struct buf *, int);
+#endif
+
 // virtio_disk.c
 void            virtio_disk_init(void);
 void            virtio_disk_rw(struct buf *, int);
