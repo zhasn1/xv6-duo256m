@@ -1,6 +1,6 @@
 #ifdef CONFIG_M_MODE
         # qemu -kernel loads the kernel at 0x80000000
-        # and causes each hart (i.e. CPU) to jump there.
+        # and causes each hart to jump there.
         # kernel.ld causes the following code to
         # be placed at 0x80000000.
 .section .text
@@ -22,12 +22,11 @@ spin:
         j spin
 #else
         # U-Boot (loady/go or bootm) jumps here in S-mode
-        # at KERNBASE, MMU off. a0/a1 are ignored.
         .section .text
         .global _entry
 _entry:
         csrw sie, zero
-        li t0, (3 << 13) | (3 << 23) | 2   # sstatus FS, VS, SIE
+        li t0, (3 << 13) | (3 << 23) | 2
         csrc sstatus, t0
         la t0, earlytrap
         csrw stvec, t0

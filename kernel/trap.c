@@ -28,7 +28,7 @@ trapinithart(void)
 {
   w_stvec((uint64)kernelvec);
 #ifndef CONFIG_M_MODE
-  w_sie(r_sie() | SIE_SEIE | SIE_STIE);   // nothing upstream of xv6 enables them
+  w_sie(r_sie() | SIE_SEIE | SIE_STIE); // nothing upstream of xv6 enables them
   printk("hart %d: sie=0x%x\n", cpuid(), (int)r_sie());
   sbi_set_timer(r_time() + INTERVAL);
 #endif

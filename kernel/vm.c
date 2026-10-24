@@ -26,15 +26,19 @@ kvmmake(void)
   kpgtbl = (pagetable_t)kalloc();
   memset(kpgtbl, 0, PGSIZE);
 
+#ifdef DUO
+  // uart registers
+  kvmmap(kpgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+
+  // PLIC, in two ranges, so the PLIC_CTRL page (0x701FF000)
+  // stays unmapped.
+  kvmmap(kpgtbl, PLIC, PLIC, 0x3000, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, PLIC + 0x201000, PLIC + 0x201000, PGSIZE,
+         PTE_R | PTE_W | PTE_THEAD_DEVICE);
+#else
   // uart registers
   kvmmap(kpgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W);
 
-#ifdef DUO
-  // PLIC, in two ranges, so the PLIC_CTRL page (0x701FF000)
-  // stays unmapped.
-  kvmmap(kpgtbl, PLIC, PLIC, 0x3000, PTE_R | PTE_W);
-  kvmmap(kpgtbl, PLIC + 0x201000, PLIC + 0x201000, PGSIZE, PTE_R | PTE_W);
-#else
   // virtio mmio disk interface
   kvmmap(kpgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
 
@@ -63,7 +67,7 @@ kvmmake(void)
 // only used when booting.
 // does not flush TLB or enable paging.
 void
-kvmmap(pagetable_t kpgtbl, uint64 va, uint64 pa, uint64 sz, int perm)
+kvmmap(pagetable_t kpgtbl, uint64 va, uint64 pa, uint64 sz, uint64 perm)
 {
   if (mappages(kpgtbl, va, sz, pa, perm) != 0)
     panic("kvmmap");
@@ -157,7 +161,8 @@ walkaddr(pagetable_t pagetable, uint64 va)
 // Returns 0 on success, -1 if walk() couldn't
 // allocate a needed page-table page.
 int
-mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
+mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa,
+         uint64 perm)
 {
   uint64 a, last;
   pte_t *pte;
@@ -170,6 +175,12 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 
   if (size == 0)
     panic("mappages: size");
+
+#ifdef DUO
+  perm |= PTE_A | PTE_D;
+  if ((perm & PTE_THEAD_MASK) == 0)
+    perm |= PTE_THEAD_NORMAL;
+#endif
 
   a = va;
   last = va + size - PGSIZE;
@@ -228,7 +239,7 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
 // Allocate PTEs and physical memory to grow a process from oldsz to
 // newsz, which need not be page aligned.  Returns new size or 0 on error.
 uint64
-uvmalloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz, int xperm)
+uvmalloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz, uint64 xperm)
 {
   char *mem;
   uint64 a;
@@ -313,7 +324,7 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
   pte_t *pte;
   uint64 pa, i;
-  uint flags;
+  uint64 flags;
   char *mem;
 
   for (i = 0; i < sz; i += PGSIZE) {

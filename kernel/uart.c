@@ -50,6 +50,8 @@ uartinit(void)
 {
 #ifdef DUO
   // SBI console until the DW UART driver (4-byte register stride).
+  // read the UART's scratch register to clear any pending interrupts.
+  (void)*(volatile uint32 *)(UART0 + 0x7C);
   initsleeplock(&tx_lock, "uart");
 #else
   // disable interrupts.

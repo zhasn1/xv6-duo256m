@@ -66,24 +66,34 @@ timerinit()
   w_stimecmp(r_time() + INTERVAL);
 }
 #else
-static void puthex(uint64 x) {
+static void
+puthex(uint64 x)
+{
   sbi_puts("0x");
   for (int i = 60; i >= 0; i -= 4)
     sbi_putchar("0123456789abcdef"[(x >> i) & 0xf]);
 }
 
-// Early trap stub target: SBI only, no locks, no printk.
-void earlytrap_c(void) {
-  sbi_puts("early trap: scause "); puthex(r_scause());
-  sbi_puts(" sepc "); puthex(r_sepc());
-  sbi_puts(" stval "); puthex(r_stval());
+// Early trap stub target
+void
+earlytrap_c(void)
+{
+  sbi_puts("early trap: scause ");
+  puthex(r_scause());
+  sbi_puts(" sepc ");
+  puthex(r_sepc());
+  sbi_puts(" stval ");
+  puthex(r_stval());
   sbi_puts("\n");
-  for (;;) ;
+  for (;;)
+    ;
 }
 
-// entry.S jumps here in supervisor mode on stack0.
-void start(void) {
-  w_tp(0);                    // one hart; hartid 0
+// entry.S jumps here in supervisor mode
+void
+start(void)
+{
+  w_tp(0); // one hart; hartid 0
   sbi_puts("xv6-duo: entry ok\n");
   main();
 }

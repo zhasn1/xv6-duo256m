@@ -363,8 +363,15 @@ r_ra()
 static inline void
 sfence_vma()
 {
+#ifdef DUO
+  // C906 TLB-update sequence: fence.i before and after.
+  asm volatile("fence.i" ::: "memory");
+#endif
   // the zero, zero means flush all TLB entries.
   asm volatile("sfence.vma zero, zero" ::: "memory");
+#ifdef DUO
+  asm volatile("fence.i" ::: "memory");
+#endif
 }
 
 // fence for memory-mapped IO
@@ -397,13 +404,23 @@ typedef uint64 *pagetable_t; // 512 PTEs
 #define PTE_W (1L << 2)
 #define PTE_X (1L << 3)
 #define PTE_U (1L << 4) // user can access
+#define PTE_A (1L << 6) // accessed
+#define PTE_D (1L << 7) // dirty
+
+#ifdef DUO
+#define PTE_THEAD_DEVICE ((1UL << 63) | (1UL << 60))
+#define PTE_THEAD_NORMAL ((1UL << 62) | (1UL << 61) | (1UL << 60))
+#define PTE_THEAD_MASK   (0x1FUL << 59)
+#endif
 
 // shift a physical address to the right place for a PTE.
 #define PA2PTE(pa) ((((uint64)pa) >> 12) << 10)
 
-#define PTE2PA(pte) (((pte) >> 10) << 12)
+// the PPN is bits 10-53, strip the attribute bits above it.
+#define PTE2PA(pte) ((((pte) >> 10) & 0xFFFFFFFFFFFUL) << 12)
 
-#define PTE_FLAGS(pte) ((pte) & 0x3FF)
+// keep the attribute bits, so uvmcopy copies them.
+#define PTE_FLAGS(pte) ((pte) & (0x3FFUL | (0x1FUL << 59)))
 
 // extract the three 9-bit page table indices from a virtual address.
 #define PXMASK         0x1FF // 9 bits
