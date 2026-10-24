@@ -31,7 +31,7 @@ OBJS = \
   $K/plic.o
 
 ifeq ($(DUO),1)
-OBJS += $K/ramdisk.o
+OBJS += $K/ramdisk.o $K/sbi.o
 else
 OBJS += $K/virtio_disk.o
 endif

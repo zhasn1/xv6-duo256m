@@ -48,6 +48,10 @@ extern volatile int panicked;  // from printk.c
 void
 uartinit(void)
 {
+#ifdef DUO
+  // SBI console until the DW UART driver (4-byte register stride).
+  initsleeplock(&tx_lock, "uart");
+#else
   // disable interrupts.
   WriteReg(IER, 0x00);
 
@@ -71,6 +75,7 @@ uartinit(void)
   WriteReg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
 
   initsleeplock(&tx_lock, "uart");
+#endif
 }
 
 // transmit buf[] to the uart. it blocks if the
@@ -110,10 +115,16 @@ uartputc_sync(int c)
       ;
   }
 
+#ifdef DUO
+  if (c == '\n')
+    sbi_putchar('\r');
+  sbi_putchar(c);
+#else
   // wait for UART to set Transmit Holding Empty in LSR.
   while ((ReadReg(LSR) & LSR_TX_IDLE) == 0)
     ;
   WriteReg(THR, c);
+#endif
 
   if (panicking == 0)
     pop_off();

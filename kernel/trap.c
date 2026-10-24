@@ -27,6 +27,11 @@ void
 trapinithart(void)
 {
   w_stvec((uint64)kernelvec);
+#ifndef CONFIG_M_MODE
+  w_sie(r_sie() | SIE_SEIE | SIE_STIE);   // nothing upstream of xv6 enables them
+  printk("hart %d: sie=0x%x\n", cpuid(), (int)r_sie());
+  sbi_set_timer(r_time() + INTERVAL);
+#endif
 }
 
 //
@@ -176,7 +181,11 @@ clockintr()
   // ask for the next timer interrupt. this also clears
   // the interrupt request. 1000000 is about a tenth
   // of a second.
+#ifdef CONFIG_M_MODE
   w_stimecmp(r_time() + INTERVAL);
+#else
+  sbi_set_timer(r_time() + INTERVAL);
+#endif
 }
 
 // check if it's an external interrupt or software interrupt,

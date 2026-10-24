@@ -84,10 +84,16 @@ kvminithart()
   // wait for any previous writes to the page table memory to finish.
   sfence_vma();
 
+#ifndef CONFIG_M_MODE
+  printk("satp before 0x%lx\n", r_satp());
+#endif
   w_satp(MAKE_SATP(kernel_pagetable));
 
   // flush stale entries from the TLB.
   sfence_vma();
+#ifndef CONFIG_M_MODE
+  printk("satp after 0x%lx\n", r_satp());
+#endif
 }
 
 // Return the address of the PTE in page table pagetable

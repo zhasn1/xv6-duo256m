@@ -181,6 +181,11 @@ void            plic_complete(int);
 // ramdisk.c
 void            ramdiskinit(void);
 void            ramdiskrw(struct buf *, int);
+
+// sbi.c
+void            sbi_putchar(int);
+void            sbi_set_timer(uint64);
+void            sbi_puts(const char *);
 #endif
 
 // virtio_disk.c
