@@ -12,3 +12,5 @@ _*
 .gdbinit
 TAGS
 /kernel/.config-stamp
+imgtools/genimage.tmp/
+imgtools/genimage.root/

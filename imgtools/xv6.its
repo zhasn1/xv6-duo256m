@@ -1,0 +1,33 @@
+/dts-v1/;
+
+/ {
+    description = "xv6 for Milk-V Duo 256M";
+
+    images {
+        kernel-1 {
+            data = /incbin/("./kernel.bin");
+            type = "kernel";
+            arch = "riscv";
+            os = "linux";
+            compression = "none";
+            load = <0x0 0x80200000>;
+            entry = <0x0 0x80200000>;
+            hash-1 { algo = "crc32"; };
+        };
+        fdt-1 {
+            data = /incbin/("./sg2002-milkv-duo256m.dtb");
+            type = "flat_dt";
+            arch = "riscv";
+            compression = "none";
+            hash-1 { algo = "sha256"; };
+        };
+    };
+
+    configurations {
+        default = "config-sg2002_milkv_duo256m_musl_riscv64_sd";
+        config-sg2002_milkv_duo256m_musl_riscv64_sd {
+            kernel = "kernel-1";
+            fdt = "fdt-1";
+        };
+    };
+};
