@@ -6,7 +6,7 @@
         # at the same virtual address (TRAMPOLINE)
         # in user and kernel space so that it continues
         # to work when it switches page tables.
-        # kernel.ld causes this code to start at 
+        # kernel.ld causes this code to start at
         # a page boundary.
         #
 
@@ -19,7 +19,7 @@
 trampoline:
 .align 4
 .globl uservec
-uservec:    
+uservec:
 	#
         # trap.c sets stvec to point here, so
         # traps from user space start here,
@@ -35,7 +35,7 @@ uservec:
         # but it's mapped to the same virtual address
         # (TRAPFRAME) in every process's user page table.
         li a0, TRAPFRAME
-        
+
         # save the user registers in TRAPFRAME
         sd ra, 40(a0)
         sd sp, 48(a0)
@@ -85,7 +85,9 @@ uservec:
         ld t1, 0(a0)
 
         # wait for any previous memory operations to complete, so that
-        # they use the user page table.
+        # they use the user page table. the fence.i before and after
+        # the satp switch is the C906 TLB-update sequence.
+        fence.i
         sfence.vma zero, zero
 
         # install the kernel page table.
@@ -93,6 +95,7 @@ uservec:
 
         # flush now-stale user entries from the TLB.
         sfence.vma zero, zero
+        fence.i
 
         # call usertrap()
         jalr t0
@@ -110,6 +113,11 @@ userret:
         sfence.vma zero, zero
         csrw satp, a0
         sfence.vma zero, zero
+
+        # completes the C906 TLB-update sequence and
+        # makes code written by exec() and fork() visible to
+        # instruction fetch before sret.
+        fence.i
 
         li a0, TRAPFRAME
 
@@ -147,7 +155,7 @@ userret:
 
 	# restore user a0
         ld a0, 112(a0)
-        
+
         # return to user mode and user pc.
         # prepare_return() sets up sstatus and sepc.
         sret

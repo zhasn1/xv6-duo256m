@@ -1,4 +1,10 @@
 #include "types.h"
+#include "riscv.h"
+#include "defs.h"
+
+#define SBI_EXT_TIME 0x54494D45
+#define SBI_EXT_TIME_SET_TIMER 0
+#define SBI_EXT_0_1_CONSOLE_PUTCHAR 0x01
 
 static uint64
 sbi_call(uint64 eid, uint64 fid, uint64 arg0)
@@ -14,12 +20,12 @@ sbi_call(uint64 eid, uint64 fid, uint64 arg0)
 void
 sbi_putchar(int c)
 {
-  sbi_call(0x01, 0, c);
+  sbi_call(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, c);
 }
 void
 sbi_set_timer(uint64 t)
 {
-  sbi_call(0x54494D45, 0, t);
+  sbi_call(SBI_EXT_TIME, SBI_EXT_TIME_SET_TIMER, t);
 }
 
 void
@@ -30,4 +36,12 @@ sbi_puts(const char *s)
       sbi_putchar('\r');
     sbi_putchar(*s);
   }
+}
+
+void
+sbi_puthex(uint64 x)
+{
+  sbi_puts("0x");
+  for (int i = 60; i >= 0; i -= 4)
+    sbi_putchar("0123456789abcdef"[(x >> i) & 0xf]);
 }

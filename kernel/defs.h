@@ -184,8 +184,9 @@ void            ramdiskrw(struct buf *, int);
 
 // sbi.c
 void            sbi_putchar(int);
-void            sbi_set_timer(uint64);
 void            sbi_puts(const char *);
+void            sbi_puthex(uint64);
+void            sbi_set_timer(uint64);
 #endif
 
 // virtio_disk.c

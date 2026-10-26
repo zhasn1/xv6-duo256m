@@ -21,29 +21,40 @@ _entry:
 spin:
         j spin
 #else
-        # U-Boot (loady/go or bootm) jumps here in S-mode
-        .section .text
-        .global _entry
+        # U-Boot jumps here in S-mode
+.section .text
+.global _entry
 _entry:
+        # no interrupts until the kernel asks for them.
         csrw sie, zero
+        # clear sstatus SIE (bit 1), FS (bits 14:13), and VS (bits 24:23).
+        # uboot leaves FS and VS dirty.
         li t0, (3 << 13) | (3 << 23) | 2
         csrc sstatus, t0
-        la t0, earlytrap
+        # report any trap taken before main() sets up kernelvec
+        la t0, earlytrapvec
         csrw stvec, t0
+        # zero out the BSS segment. objcopy -O binary drops it
+        # and loady doesn't clear RAM.
         la t0, _bss_start
         la t1, _bss_end
-1:      bgeu t0, t1, 2f
+1:
+        bgeu t0, t1, 2f
         sd zero, 0(t0)
         addi t0, t0, 8
         j 1b
-2:      la sp, stack0
-        li t0, 4096
+2:
+        # set up a stack for C.
+        la sp, stack0
+        li t0, 1024*4
         add sp, sp, t0
         call start
-3:      j 3b
-
+spin:
+        j spin
+        # early trap handler: print scause, sepc, and stval
+        # through SBI, then spin.
         .balign 4
-earlytrap:
+earlytrapvec:
         call earlytrap_c
-4:      j 4b
+        j spin
 #endif

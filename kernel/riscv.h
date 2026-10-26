@@ -408,10 +408,13 @@ typedef uint64 *pagetable_t; // 512 PTEs
 #define PTE_D (1L << 7) // dirty
 
 #ifdef DUO
-#define PTE_THEAD_DEVICE ((1UL << 63) | (1UL << 60))
-#define PTE_THEAD_NORMAL ((1UL << 62) | (1UL << 61) | (1UL << 60))
-#define PTE_THEAD_MASK   (0x1FUL << 59)
+#define PTE_THEAD_SO     (1UL << 63) // strong order
+#define PTE_THEAD_C      (1UL << 62) // cacheable
+#define PTE_THEAD_B      (1UL << 61) // bufferable
+#define PTE_THEAD_DEVICE (PTE_THEAD_SO | (1UL << 60)) // bit 60 is undefined but Linux sets it.
+#define PTE_THEAD_NORMAL (PTE_THEAD_C | PTE_THEAD_B | (1UL << 60))
 #endif
+#define PTE_THEAD_MASK (0x1FUL << 59) // bits 59-63
 
 // shift a physical address to the right place for a PTE.
 #define PA2PTE(pa) ((((uint64)pa) >> 12) << 10)
@@ -420,7 +423,7 @@ typedef uint64 *pagetable_t; // 512 PTEs
 #define PTE2PA(pte) ((((pte) >> 10) & 0xFFFFFFFFFFFUL) << 12)
 
 // keep the attribute bits, so uvmcopy copies them.
-#define PTE_FLAGS(pte) ((pte) & (0x3FFUL | (0x1FUL << 59)))
+#define PTE_FLAGS(pte) ((pte) & (0x3FFUL | PTE_THEAD_MASK))
 
 // extract the three 9-bit page table indices from a virtual address.
 #define PXMASK         0x1FF // 9 bits

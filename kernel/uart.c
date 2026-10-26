@@ -36,6 +36,7 @@
 #define FCR_FIFO_ENABLE (1 << 0)
 #define FCR_FIFO_CLEAR  (3 << 1) // clear the content of the two FIFOs
 #define ISR             2        // interrupt status register
+#define ISR_BUSY_DETECT 0x7      // LCR written while busy, DesignWare UART only
 #define LCR             3        // line control register
 #define LCR_EIGHT_BITS  (3 << 0)
 #define LCR_BAUD_LATCH  (1 << 7) // special mode to set baud rate
@@ -43,7 +44,7 @@
 #define LSR_RX_READY    (1 << 0) // input is waiting to be read from RHR
 #define LSR_TX_IDLE     (1 << 5) // THR can accept another character to send
 #define LSR_TX_EMPTY    (1 << 6) // THR and transmit shift register are empty
-#define USR             31       // DesignWare UART status register (0x7C)
+#define USR             0x1F     // DesignWare UART status register (0x7C)
 
 // for sending threads to serialize their writes
 static struct sleeplock tx_lock;
@@ -69,15 +70,16 @@ uartinit(void)
   // reset and enable FIFOs.
   WriteReg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
 
-  // clear the busy detect interrupt firmware leaves latched.
-  // IER does not mask it, and IRQ 44 is level-triggered.
+  // clear the busy detect interrupt left over from U-Boot.
   (void)ReadReg(USR);
 
   // enable transmit and receive interrupts.
   WriteReg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
 
   initsleeplock(&tx_lock, "uart");
-#else
+  return;
+#endif
+
   // disable interrupts.
   WriteReg(IER, 0x00);
 
@@ -101,7 +103,6 @@ uartinit(void)
   WriteReg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
 
   initsleeplock(&tx_lock, "uart");
-#endif
 }
 
 // transmit buf[] to the uart. it blocks if the
@@ -116,6 +117,12 @@ uartwrite(char buf[], int n)
   while (i < n) {
     sleep_prepare(&tx_chan);
     if (ReadReg(LSR) & LSR_TX_IDLE) {
+#ifdef DUO
+      // serial terminal needs \r\n.
+      if (buf[i] == '\n') {
+        WriteReg(THR, '\r');
+      }
+#endif
       WriteReg(THR, buf[i]);
       i += 1;
     } else {
@@ -141,17 +148,14 @@ uartputc_sync(int c)
       ;
   }
 
-#ifdef DUO
-  if (c == '\n') {
-    while ((ReadReg(LSR) & LSR_TX_IDLE) == 0)
-      ;
-    WriteReg(THR, '\r');
-  }
-#endif
-
   // wait for UART to set Transmit Holding Empty in LSR.
   while ((ReadReg(LSR) & LSR_TX_IDLE) == 0)
     ;
+#ifdef DUO
+  if (c == '\n') {
+    WriteReg(THR, '\r');
+  }
+#endif
   WriteReg(THR, c);
 
   if (panicking == 0)
@@ -165,7 +169,7 @@ uartgetc(void)
 {
   // is input ready?
   if (ReadReg(LSR) & LSR_RX_READY) {
-    return ReadReg(RHR);
+    return ReadReg(RHR) & 0xFF;
   } else {
     return -1;
   }
@@ -177,10 +181,14 @@ uartgetc(void)
 void
 uartintr(void)
 {
+
 #ifdef DUO
-  uint32 iir = ReadReg(ISR); // acknowledge the interrupt
-  if ((iir & 0xF) == 0x7)    // busy detect
-    (void)ReadReg(USR);      // reading USR clears it
+  // acknowledge the interrupt and check for busy detect.
+  // DesignWare busy-detect interrupt is cleared by reading
+  // USR.
+  if ((ReadReg(ISR) & 0xF) == ISR_BUSY_DETECT) {
+    (void)ReadReg(USR);
+  }
 #else
   ReadReg(ISR); // acknowledge the interrupt
 #endif

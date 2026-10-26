@@ -5,8 +5,8 @@ SECTIONS
 {
   /*
    * ensure that entry.S / _entry is at KERNBASE:
-   * qemu's -kernel jumps to 0x80000000, and U-Boot
-   * loads the Duo kernel at 0x80200000.
+   * qemu's -kernel jumps to 0x80000000,
+   * and U-Boot loads the Duo kernel at 0x80200000.
    */
   . = KERNBASE;
 
@@ -33,6 +33,10 @@ SECTIONS
     *(.sdata .sdata.*) /* do not need to distinguish this from .data */
     . = ALIGN(16);
     *(.data .data.*)
+    . = ALIGN(0x100);
+    _ramdisk_start = .; /* fs.img on the Duo (ramdisk_data.S); empty on qemu */
+    *(.ramdisk .ramdisk.*)
+    _ramdisk_end = .;
   }
 
   .bss : {

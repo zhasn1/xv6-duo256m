@@ -28,8 +28,17 @@ trapinithart(void)
 {
   w_stvec((uint64)kernelvec);
 #ifndef CONFIG_M_MODE
-  w_sie(r_sie() | SIE_SEIE | SIE_STIE); // nothing upstream of xv6 enables them
-  printk("hart %d: sie=0x%x\n", cpuid(), (int)r_sie());
+  // no machine-mode start code runs on this path,so nothing
+  // upstream of xv6 enables timer or external interrupts.
+  w_sie(r_sie() | SIE_SEIE | SIE_STIE);
+
+  // sie bits are writable only if mideleg delegates them.
+  uint64 sie = r_sie();
+  printk("hart %d: sie=0x%lx\n", cpuid(), sie);
+  if ((sie & (SIE_SEIE | SIE_STIE)) != (SIE_SEIE | SIE_STIE)) {
+    panic("trapinithart: STIE/SEIE not delegated");
+  }
+  // ask for the first timer interrupt.
   sbi_set_timer(r_time() + INTERVAL);
 #endif
 }
@@ -179,8 +188,7 @@ clockintr()
   }
 
   // ask for the next timer interrupt. this also clears
-  // the interrupt request. 1000000 is about a tenth
-  // of a second.
+  // the interrupt request.
 #ifdef CONFIG_M_MODE
   w_stimecmp(r_time() + INTERVAL);
 #else

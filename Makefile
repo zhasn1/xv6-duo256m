@@ -31,7 +31,7 @@ OBJS = \
   $K/plic.o
 
 ifeq ($(DUO),1)
-OBJS += $K/ramdisk.o $K/sbi.o
+OBJS += $K/ramdisk.o $K/sbi.o $K/ramdisk_data.o
 else
 OBJS += $K/virtio_disk.o
 endif
@@ -113,6 +113,8 @@ $K/kernel: $(OBJS) $K/kernel.ld
 
 $K/%.o: $K/%.S
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+$K/ramdisk_data.o: fs.img
 
 $K/kernel.bin: $K/kernel
 	$(OBJCOPY) -O binary $K/kernel $K/kernel.bin

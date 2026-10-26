@@ -66,24 +66,16 @@ timerinit()
   w_stimecmp(r_time() + INTERVAL);
 }
 #else
-static void
-puthex(uint64 x)
-{
-  sbi_puts("0x");
-  for (int i = 60; i >= 0; i -= 4)
-    sbi_putchar("0123456789abcdef"[(x >> i) & 0xf]);
-}
-
 // Early trap stub target
 void
 earlytrap_c(void)
 {
   sbi_puts("early trap: scause ");
-  puthex(r_scause());
+  sbi_puthex(r_scause());
   sbi_puts(" sepc ");
-  puthex(r_sepc());
+  sbi_puthex(r_sepc());
   sbi_puts(" stval ");
-  puthex(r_stval());
+  sbi_puthex(r_stval());
   sbi_puts("\n");
   for (;;)
     ;
