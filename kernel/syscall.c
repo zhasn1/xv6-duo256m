@@ -95,6 +95,7 @@ extern uint64 sys_getpid(void);
 extern uint64 sys_sbrk(void);
 extern uint64 sys_pause(void);
 extern uint64 sys_uptime(void);
+extern uint64 sys_ioctl(void);
 extern uint64 sys_open(void);
 extern uint64 sys_write(void);
 extern uint64 sys_mknod(void);
@@ -130,6 +131,7 @@ static uint64 (*syscalls[])(void) = {
   [SYS_mkdir]   = sys_mkdir,
   [SYS_close]   = sys_close,
   [SYS_sync]    = sys_sync,
+  [SYS_ioctl]   = sys_ioctl,
   // clang-format on
 };
 

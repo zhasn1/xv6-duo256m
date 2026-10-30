@@ -34,6 +34,7 @@ void            fileinit(void);
 int             fileread(struct file*, uint64, int n);
 int             filestat(struct file*, uint64 addr);
 int             filewrite(struct file*, uint64, int n);
+int             fileioctl(struct file*, int, uint64);
 
 // fs.c
 void            fsinit(int);
@@ -187,6 +188,24 @@ void            sbi_putchar(int);
 void            sbi_puts(const char *);
 void            sbi_puthex(uint64);
 void            sbi_set_timer(uint64);
+
+// pinmux.c
+void            pinmuxinit(void);
+int             mmio_wait(volatile uint32 *, uint32, uint32, int);
+
+// gpio.c
+void            gpioinit(void);
+void            gpiointr(int);
+void            gpiotick(void);
+
+// pwm.c
+void            pwminit(void);
+
+// spi.c
+void            spiinit(void);
+
+// i2c.c
+void            i2cinit(void);
 #endif
 
 // virtio_disk.c

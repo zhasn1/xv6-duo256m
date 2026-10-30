@@ -185,6 +185,9 @@ clockintr()
     ticks++;
     wakeup(&ticks);
     release(&tickslock);
+#ifdef DUO
+    gpiotick();
+#endif
   }
 
   // ask for the next timer interrupt. this also clears
@@ -214,7 +217,10 @@ devintr()
 
     if (irq == UART0_IRQ) {
       uartintr();
-#ifndef DUO
+#ifdef DUO
+    } else if ((irq >= GPIO0_IRQ && irq <= GPIO3_IRQ) || irq == GPIO4_IRQ) {
+      gpiointr(irq);
+#else
     } else if (irq == VIRTIO0_IRQ) {
       virtio_disk_intr();
 #endif

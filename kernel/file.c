@@ -177,3 +177,13 @@ filewrite(struct file *f, uint64 addr, int n)
 
   return ret;
 }
+
+int
+fileioctl(struct file *f, int req, uint64 arg)
+{
+  if (f->type != FD_DEVICE)
+    return -1;
+  if (f->major < 0 || f->major >= NDEV || !devsw[f->major].ioctl)
+    return -1;
+  return devsw[f->major].ioctl(1, req, arg);
+}

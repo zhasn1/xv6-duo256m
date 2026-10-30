@@ -1,6 +1,12 @@
 // Milk-V Duo 256M (SG2002, C906)
 //
-// 04140000 -- uart0 (DesignWare 8250, 4-byte register stride)
+// 03001000 -- pinmux
+// 03020000 -- gpio porta-portd (03020000-03023000)
+// 03061000 -- pwm4-7
+// 04010000 -- i2c1
+// 04140000 -- uart0
+// 041A0000 -- spi2
+// 05021000 -- gpio porte (PWR_GPIO)
 // 70000000 -- PLIC
 // 80000000 -- OpenSBI (0x80000000-0x8003FFFF)
 // 80200000 -- U-Boot puts the kernel here
@@ -13,3 +19,21 @@
 #define KERNBASE  0x80200000L
 #define PHYSTOP   0x8FE00000L
 #define INTERVAL  250000
+
+#define PINMUX     0x03001000L
+#define GPIO0      0x03020000L
+#define GPIO1      0x03021000L
+#define GPIO2      0x03022000L
+#define GPIO3      0x03023000L
+#define GPIO4      0x05021000L
+#define GPIO0_IRQ  60
+#define GPIO1_IRQ  61
+#define GPIO2_IRQ  62
+#define GPIO3_IRQ  63
+#define GPIO4_IRQ  70
+#define PWM4_7     0x03061000L
+#define SPI2_BASE  0x041A0000L
+#define I2C1_BASE  0x04010000L
+#define PWM_CLK_HZ 100000000
+#define SPI_CLK_HZ 187500000
+#define I2C_CLK_HZ 100000000

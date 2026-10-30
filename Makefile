@@ -31,7 +31,7 @@ OBJS = \
   $K/plic.o
 
 ifeq ($(DUO),1)
-OBJS += $K/ramdisk.o $K/sbi.o $K/ramdisk_data.o
+OBJS += $K/ramdisk.o $K/sbi.o $K/pinmux.o $K/gpio.o $K/pwm.o $K/spi.o $K/i2c.o $K/ramdisk_data.o
 else
 OBJS += $K/virtio_disk.o
 endif
@@ -171,6 +171,8 @@ UPROGS=\
 	$U/_forphan\
 	$U/_dorphan\
 	$U/_sync\
+	$U/_blink\
+	$U/_button\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

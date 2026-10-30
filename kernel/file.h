@@ -29,12 +29,16 @@ struct inode {
   uint addrs[NDIRECT + 1];
 };
 
-// map major device number to device functions.
 struct devsw {
   int (*read)(int, uint64, int);
   int (*write)(int, uint64, int);
+  int (*ioctl)(int, int, uint64);
 };
 
 extern struct devsw devsw[];
 
 #define CONSOLE 1
+#define GPIO    2
+#define PWM     3
+#define SPI     4
+#define I2C     5

@@ -35,6 +35,18 @@ kvmmake(void)
   kvmmap(kpgtbl, PLIC, PLIC, 0x3000, PTE_R | PTE_W | PTE_THEAD_DEVICE);
   kvmmap(kpgtbl, PLIC + 0x201000, PLIC + 0x201000, PGSIZE,
          PTE_R | PTE_W | PTE_THEAD_DEVICE);
+
+  // peripherals, one page each. the spi2 block is 0x10000 long,
+  // but its registers are in the first page.
+  kvmmap(kpgtbl, PINMUX, PINMUX, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, GPIO0, GPIO0, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, GPIO1, GPIO1, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, GPIO2, GPIO2, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, GPIO3, GPIO3, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, GPIO4, GPIO4, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, PWM4_7, PWM4_7, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, SPI2_BASE, SPI2_BASE, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, I2C1_BASE, I2C1_BASE, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
 #else
   // uart registers
   kvmmap(kpgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W);

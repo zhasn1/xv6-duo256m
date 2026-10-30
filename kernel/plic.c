@@ -11,12 +11,22 @@
 void
 plicinit(void)
 {
+#ifndef DUO
   // set desired IRQ priorities non-zero (otherwise disabled).
   *(volatile uint32 *)(PLIC + UART0_IRQ * 4) = 1;
-#ifndef DUO
   *(volatile uint32 *)(PLIC + VIRTIO0_IRQ * 4) = 1;
 #endif
 }
+
+#ifdef DUO
+static void
+plic_enable(int irq)
+{
+  *(volatile uint32 *)(PLIC + irq * 4) = 1;
+  volatile uint32 *en = (volatile uint32 *)(PLIC_SENABLE(cpuid()) + 4 * (irq / 32));
+  *en |= 1 << (irq % 32);
+}
+#endif
 
 void
 plicinithart(void)
@@ -24,10 +34,14 @@ plicinithart(void)
   int hart = cpuid();
 
 #ifdef DUO
-  // IRQs 32-63 are in the second enable word (0x70002084 for hart 0).
-  // This assignment replaces the whole word: when adding IRQ 36 (SD0) or
-  // 50-58, set all bits in one write or read-modify-write.
-  *(volatile uint32 *)(PLIC_SENABLE(hart) + 4) = 1 << (UART0_IRQ - 32);
+  for (int i = 0; i < 4; i++)
+    *(volatile uint32 *)(PLIC_SENABLE(hart) + 4 * i) = 0;
+  plic_enable(UART0_IRQ);
+  plic_enable(GPIO0_IRQ);
+  plic_enable(GPIO1_IRQ);
+  plic_enable(GPIO2_IRQ);
+  plic_enable(GPIO3_IRQ);
+  plic_enable(GPIO4_IRQ);
 #else
   // set enable bits for this hart's S-mode
   // for the uart and virtio disk.

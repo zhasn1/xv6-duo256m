@@ -7,7 +7,6 @@
 volatile static int started = 0;
 
 #ifdef DUO
-// boot markers
 #define MARK(name) printk("main: " name " ok\n")
 #else
 #define MARK(name)
@@ -23,35 +22,47 @@ main()
     printk("\n");
     printk("xv6 kernel is booting\n");
     printk("\n");
-    kinit(); // physical page allocator
+    kinit();
     MARK("kinit");
-    kvminit(); // create kernel page table
+    kvminit();
     MARK("kvminit");
-    kvminithart(); // turn on paging
+    kvminithart();
     MARK("kvminithart");
-    procinit(); // process table
+    procinit();
     MARK("procinit");
-    trapinit(); // trap vectors
+    trapinit();
     MARK("trapinit");
-    trapinithart(); // install kernel trap vector
+    trapinithart();
     MARK("trapinithart");
-    plicinit(); // set up interrupt controller
+    plicinit();
     MARK("plicinit");
-    plicinithart(); // ask PLIC for device interrupts
+    plicinithart();
     MARK("plicinithart");
-    binit(); // buffer cache
+#ifdef DUO
+    pinmuxinit();
+    MARK("pinmux");
+    gpioinit();
+    MARK("gpio");
+    pwminit();
+    MARK("pwm");
+    spiinit();
+    MARK("spi");
+    i2cinit();
+    MARK("i2c");
+#endif
+    binit();
     MARK("binit");
-    iinit(); // inode table
+    iinit();
     MARK("iinit");
-    fileinit(); // file table
+    fileinit();
     MARK("fileinit");
 #ifdef DUO
-    ramdiskinit(); // fs.img in kernel memory
+    ramdiskinit();
     MARK("ramdiskinit");
 #else
     virtio_disk_init(); // emulated hard disk
 #endif
-    userinit(); // first user process
+    userinit();
     MARK("userinit");
 
     __atomic_store_n(&started, 1, __ATOMIC_RELEASE);
