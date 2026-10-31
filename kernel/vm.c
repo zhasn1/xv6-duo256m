@@ -44,7 +44,10 @@ kvmmake(void)
   kvmmap(kpgtbl, GPIO2, GPIO2, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
   kvmmap(kpgtbl, GPIO3, GPIO3, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
   kvmmap(kpgtbl, GPIO4, GPIO4, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
-  kvmmap(kpgtbl, PWM4_7, PWM4_7, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, PWM0, PWM0, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, PWM1, PWM1, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, PWM2, PWM2, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
+  kvmmap(kpgtbl, PWM3, PWM3, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
   kvmmap(kpgtbl, SPI2_BASE, SPI2_BASE, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
   kvmmap(kpgtbl, I2C1_BASE, I2C1_BASE, PGSIZE, PTE_R | PTE_W | PTE_THEAD_DEVICE);
 #else

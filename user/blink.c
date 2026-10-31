@@ -13,8 +13,8 @@ main(int argc, char *argv[])
 
   if (argc > 1)
     n = atoi(argv[1]);
-  if ((fd = open("gpio", O_RDWR)) < 0) {
-    fprintf(2, "blink: cannot open gpio\n");
+  if ((fd = open("ugpio", O_RDWR)) < 0) {
+    fprintf(2, "blink: cannot open ugpio\n");
     exit(1);
   }
   if (ioctl(fd, GPIO_IOCTL_CONFIG, LED | GPIO_MODE(GPIO_OUT)) < 0) {

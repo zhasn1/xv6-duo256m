@@ -23,10 +23,10 @@ main(void)
   dup(0); // stdout
   dup(0); // stderr
 
-  mknod("gpio", GPIO, 0);
-  mknod("pwm", PWM, 0);
-  mknod("spi", SPI, 0);
-  mknod("i2c", I2C, 0);
+  mknod("ugpio", GPIO, 0);
+  mknod("upwm", PWM, 0);
+  mknod("uspi", SPI, 0);
+  mknod("ui2c", I2C, 0);
 
   for (;;) {
     printf("init: starting sh\n");

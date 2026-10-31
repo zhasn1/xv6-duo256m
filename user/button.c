@@ -12,8 +12,8 @@ main(int argc, char *argv[])
 {
   int fd, n;
 
-  if ((fd = open("gpio", O_RDWR)) < 0) {
-    fprintf(2, "button: cannot open gpio\n");
+  if ((fd = open("ugpio", O_RDWR)) < 0) {
+    fprintf(2, "button: cannot open ugpio\n");
     exit(1);
   }
   if (ioctl(fd, GPIO_IOCTL_CONFIG, BTN | GPIO_MODE(GPIO_IN)) < 0 ||

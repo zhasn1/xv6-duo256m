@@ -173,6 +173,8 @@ UPROGS=\
 	$U/_sync\
 	$U/_blink\
 	$U/_button\
+	$U/_pwm\
+	$U/_breathe\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
