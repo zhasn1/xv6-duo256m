@@ -175,6 +175,9 @@ UPROGS=\
 	$U/_button\
 	$U/_pwm\
 	$U/_breathe\
+	$U/_spi\
+	$U/_i2c\
+	$U/_accel\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
