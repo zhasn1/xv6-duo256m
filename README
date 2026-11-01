@@ -1,3 +1,88 @@
+A port of xv6-riscv to the Milk-V Duo 256M (Sophgo SG2002). xv6 boots from
+the SD card through the board's own U-Boot and uses the UART0 console.
+
+Peripheral drivers for gpio, pwm, i2c and spi are included, along with some
+small user programs that demo them.
+
+Dependencies:
+
+- RISC-V gcc toolchain (riscv64-unknown-elf- or riscv64-linux-gnu-)
+- qemu-system-riscv64
+- mkimage (u-boot-tools) and genimage
+
+Build for milkv duo:
+
+```bash
+./build_duo256m.sh
+```
+The image is written to `imgtools/xv6-duo256m-sd.img`. Burn it to an SD card:
+```bash
+sudo dd if=imgtools/xv6-duo256m-sd.img of=/dev/sdX bs=4M conv=fsync
+```
+Make sure `sdX` is really the SD card that you want to write to.
+
+Build for qemu:
+
+```bash
+git checkout kernel/config.h
+make qemu
+```
+
+gpio demo:
+
+```bash
+blink 5 # blinks the onboard LED 5 times
+```
+
+`button` waits for presses on GP15 (pin 20) and toggles the onboard LED on
+each one. It runs until killed, so start it with `&`.
+
+```bash
+button &
+button: level 1
+press 1
+press 2
+```
+
+pwm demo:
+PWM6 on GP3 (pin 5). Connect an LED with a resistor (I used
+330 ohm) from GP3 to GND. Arguments are period and duty in ns.
+
+```bash
+pwm 1000000 900000
+pwm 1000000 100000
+pwm 1000000 0
+```
+
+The LED gets dimmer with each step and then turns off. `breathe 5` fades it
+up and down 5 times.
+
+i2c demo:
+I2C1 with SCL on GP4 (pin 6) and SDA on GP5 (pin 7). I used a
+KX132 sensor.
+
+```bash
+i2c scan
+i2c get 0x1f 0x13
+0x3d
+i2c set addr reg val...
+accel 10 # 10 readings
+```
+
+`scan` should show `1f`. Register 0x13 is WHO_AM_I (check the KX132 TRM for details).
+`accel` prints the x, y, z acceleration in mg.
+
+spi demo:
+SPI2 loopback, like spidev_test on Linux. It sends 32 bytes
+and prints what was sent and received.
+
+```bash
+$ spi
+```
+
+With nothing connected RX is all `00`. Connect GP7 (pin 10) to GP8
+(pin 11) and RX matches TX.
+
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern RISC-V multiprocessor using ANSI C.
